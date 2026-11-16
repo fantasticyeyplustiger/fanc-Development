@@ -1,12 +1,21 @@
 {
-  "pluginName": "plugin_name",
-  "godotVersion": "4.7",
-  "godotActivePath": "",
-  "savedGodotPaths": [],
+  "pluginName": "fanc",
+  "godotVersion": "4.3",
+  "godotActivePath": "E:\\Godot\\4.3\\Godot_v4.3-stable_win64.exe",
+  "savedGodotPaths": [
+    {
+      "path": "E:\\Godot\\4.3\\Godot_v4.3-stable_win64.exe",
+      "version": "4.3.stable.official.77dcf97d8"
+    },
+    {
+      "path": "E:\\Godot\\4.7\\Godot_v4.7-stable_win64.exe",
+      "version": "4.7.stable.official.5b4e0cb0f"
+    }
+  ],
   "godotProjectFolder": "",
   "ltoMode": "none",
   "selectedBuildProfile": "2d_build_profile.json",
-  "extensionApiPath": "godot-cpp/gdextension/extension_api.json",
+  "extensionApiPath": "godot-cpp/gdextension/extension_api-4-3.json",
   "reloadable": true,
   "editorTargetMode": "debug",
   "debugSymbols": "no"
