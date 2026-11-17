@@ -4,8 +4,17 @@ func _ready() -> void:
 	test()
 
 func test() -> void:
-	var my_class : Test = Test.new()
+	var lexer := FanCLexer.new()
 	
-	my_class.say_hello()
+	var source_code := "
+	int x = 10;
+	x += 12;
+	// it added up alright
+	print(x);
+	"
 	
-	print(my_class.my_data)
+	print("Lexer from C++ (GDExtension):\nSource code:\n", source_code)
+	var start_time := Time.get_ticks_usec()
+	lexer.compile_tokens(source_code)
+	var end_time := Time.get_ticks_usec()
+	print("Time: %d" % (end_time - start_time))

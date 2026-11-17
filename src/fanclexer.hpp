@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Token.hpp"
+#include "token.hpp"
 #include "godot_cpp/classes/wrapped.hpp"
 #include "godot_cpp/variant/string.hpp"
 #include <godot_cpp/classes/ref_counted.hpp>
@@ -11,44 +11,55 @@ class FanCLexer : public godot::RefCounted{
     GDCLASS(FanCLexer, godot::RefCounted)
 
 public:
-std::vector<Token> getTokens(const godot::String &sourceCode);
+    void compileTokens(const godot::String sourceCode);
+
+protected:
+    static void _bind_methods();
 
 private:
 
-int start = 0;
-int current = 0;
-int line_num = 0;
-int column = 0;
-int end = 0;
-std::string sourceCode;
-std::vector<Token> tokens;
+    int start = 0;
+    int current = 0;
+    int lineNum = 0;
+    int column = 0;
+    int end = 0;
+    std::string sourceCode;
+    std::vector<Token> tokens;
 
-void scanToken();
+    void printTokens();
 
-void reportUnexpectedChar();
+    void scanToken();
 
-bool nextIs(const char expected);
+    void reportUnexpectedChar();
 
-bool isDigit(const char ch);
+    bool nextIs(const char expected);
 
-bool isAlpha(const char ch);
+    bool isDigit(const char ch);
 
-bool isAlphaDigit(const char ch);
+    bool isAlpha(const char ch);
 
-bool isEnd();
+    bool isAlphaDigit(const char ch);
 
-void identifierToken();
+    bool isDecimal();
 
-void numberToken();
+    bool isScientificNotation();
 
-void stringToken();
+    bool isEnd();
 
-void skipCommentRegion();
+    void identifierToken();
 
-void peek();
+    void numberToken();
 
-void advance();
+    void stringToken();
 
-void addToken();
+    void skipCommentRegion();
 
-};
+    void skipCommentLine();
+
+    char peek(int extra = 0);
+
+    char advance();
+
+    void addToken(Token::Type type, std::variant<int, bool, double, std::string> literal = false);
+
+    };
