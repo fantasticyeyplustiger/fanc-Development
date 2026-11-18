@@ -1,22 +1,9 @@
-#include "godot_cpp/core/object.hpp"
+#include "Token.hpp"
+#include "fancerror.hpp"
 #include "token.hpp"
 #include "fanclexer.hpp"
 #include <vector>
 #include <string>
-
-void FanCLexer::_bind_methods(){
-
-    godot::ClassDB::bind_method(godot::D_METHOD("compile_tokens", "source_code"), &FanCLexer::compileTokens);
-    godot::ClassDB::bind_method(godot::D_METHOD("print_tokens"), &FanCLexer::printTokens);
-    
-    ADD_SIGNAL(godot::MethodInfo("lexer_errored",
-            godot::PropertyInfo(godot::Variant::INT, "line_number"),
-            godot::PropertyInfo(godot::Variant::INT, "column"),
-            godot::PropertyInfo(godot::Variant::INT, "lexeme_length"),
-            godot::PropertyInfo(godot::Variant::STRING, "error_message")
-    ));
-    
-};
 
 void FanCLexer::printTokens(){
     for (Token token : tokens) {
@@ -24,8 +11,8 @@ void FanCLexer::printTokens(){
     }
 }
 
-void FanCLexer::compileTokens(const godot::String sourceCode){
-    this -> sourceCode = sourceCode.utf8().get_data();
+std::vector<Token> FanCLexer::compileTokens(const std::string& sourceCode){
+    this -> sourceCode = sourceCode;
 
     start = 0;
     current = 0;
@@ -39,7 +26,8 @@ void FanCLexer::compileTokens(const godot::String sourceCode){
         start = current;
     }
 
-    addToken(Token::Type::END);
+    addToken(Type::END);
+    return tokens;
 };
 
 void FanCLexer::scanToken() {
@@ -47,47 +35,47 @@ void FanCLexer::scanToken() {
 
     switch (ch) {
 
-        case '(': addToken(Token::Type::LEFT_PAREN); break;
-        case ')': addToken(Token::Type::RIGHT_PAREN); break;
-        case '[': addToken(Token::Type::LEFT_BRACKET); break;
-        case ']': addToken(Token::Type::RIGHT_BRACKET); break;
-        case '{': addToken(Token::Type::LEFT_BRACE); break;
-        case '}': addToken(Token::Type::RIGHT_BRACE); break;
+        case '(': addToken(Type::LEFT_PAREN); break;
+        case ')': addToken(Type::RIGHT_PAREN); break;
+        case '[': addToken(Type::LEFT_BRACKET); break;
+        case ']': addToken(Type::RIGHT_BRACKET); break;
+        case '{': addToken(Type::LEFT_BRACE); break;
+        case '}': addToken(Type::RIGHT_BRACE); break;
 
-        case '?': addToken(Token::Type::TERNARY); break;
-        case ':': addToken(Token::Type::COLON); break;
-        case ';': addToken(Token::Type::SEMICOLON); break;
-        case ',': addToken(Token::Type::COMMA); break;
-        case '.': addToken(Token::Type::DOT); break;
+        case '?': addToken(Type::TERNARY); break;
+        case ':': addToken(Type::COLON); break;
+        case ';': addToken(Type::SEMICOLON); break;
+        case ',': addToken(Type::COMMA); break;
+        case '.': addToken(Type::DOT); break;
 
-        case '+': addToken(nextIs('=') ? Token::Type::PLUS_EQUAL : Token::Type::PLUS); break;
-        case '-': addToken(nextIs('=') ? Token::Type::MINUS_EQUAL : Token::Type::MINUS); break;
-        case '*': addToken(nextIs('=') ? Token::Type::STAR_EQUAL : Token::Type::STAR); break;
-        case '%': addToken(nextIs('=') ? Token::Type::MODULO_EQUAL : Token::Type::MODULO); break;
+        case '+': addToken(nextIs('=') ? Type::PLUS_EQUAL : Type::PLUS); break;
+        case '-': addToken(nextIs('=') ? Type::MINUS_EQUAL : Type::MINUS); break;
+        case '*': addToken(nextIs('=') ? Type::STAR_EQUAL : Type::STAR); break;
+        case '%': addToken(nextIs('=') ? Type::MODULO_EQUAL : Type::MODULO); break;
         case '/': {
             if (nextIs('*')) { skipCommentRegion(); }
             else if (nextIs('/')) { skipCommentLine(); }
 
             else{
-                addToken(nextIs('=') ? Token::Type::SLASH_EQUAL : Token::Type::SLASH);
+                addToken(nextIs('=') ? Type::SLASH_EQUAL : Type::SLASH);
             }
 
             break;
         }
 
-        case '!': addToken(nextIs('=') ? Token::Type::NOT_EQUAL : Token::Type::NOT); break;
-        case '=': addToken(nextIs('=') ? Token::Type::EQUAL_EQUAL : Token::Type::EQUAL); break;
-        case '<': addToken(nextIs('=') ? Token::Type::LESS_EQUAL : Token::Type::LESS); break;
-        case '>': addToken(nextIs('=') ? Token::Type::GREATER_EQUAL : Token::Type::GREATER); break;
+        case '!': addToken(nextIs('=') ? Type::NOT_EQUAL : Type::NOT); break;
+        case '=': addToken(nextIs('=') ? Type::EQUAL_EQUAL : Type::EQUAL); break;
+        case '<': addToken(nextIs('=') ? Type::LESS_EQUAL : Type::LESS); break;
+        case '>': addToken(nextIs('=') ? Type::GREATER_EQUAL : Type::GREATER); break;
 
         case '&': {
-            if (nextIs('&')) { addToken(Token::Type::AND); }
+            if (nextIs('&')) { addToken(Type::AND); }
             else { reportUnexpectedChar(); }
             break;
         }
 
         case '|': {
-            if (nextIs('|')) { addToken(Token::Type::OR); }
+            if (nextIs('|')) { addToken(Type::OR); }
             else { reportUnexpectedChar(); }
             break;
         }
@@ -113,7 +101,7 @@ void FanCLexer::scanToken() {
 }
 
 void FanCLexer::reportUnexpectedChar(){
-    emit_signal("lexer_errored", lineNum, column, 1, "Unexpected character!");
+    errors.push_back(FanCError(lineNum, column, 1, FanCError::LEXER, "Unexpected character!"));
 }
 
 char FanCLexer::peek(int extra){
@@ -174,7 +162,7 @@ void FanCLexer::stringToken(){
 
     // If this is true then last " wasn't found
     if (isEnd()){
-        emit_signal("lexer_errored", lineNum, column, 1, "Unterminated string!");
+        errors.push_back(FanCError(lineNum, column, 1, FanCError::COMPILER, "Unterminated string!"));
         return;
     }
 
@@ -182,7 +170,7 @@ void FanCLexer::stringToken(){
     advance();
 
     std::string value = sourceCode.substr(start + 1, (current - (start + 2)));
-    addToken(Token::Type::STRING, value);
+    addToken(Type::STRING, value);
 }
 
 void FanCLexer::numberToken(){
@@ -266,7 +254,7 @@ void FanCLexer::numberToken(){
 
     if (isInt){
         int number = std::stoi(numberText);
-        addToken(Token::Type::NUMBER, number);
+        addToken(Type::NUMBER, number);
     }
     else{
 
@@ -275,12 +263,12 @@ void FanCLexer::numberToken(){
             int exponent = std::stoi(exponentText);
             float number = std::stof(numberText);
 
-            addToken(Token::Type::NUMBER, number * std::pow(10, exponent));
+            addToken(Type::NUMBER, number * std::pow(10, exponent));
 
         }
         else{
             float number = std::stof(numberText);
-            addToken(Token::Type::NUMBER, number);
+            addToken(Type::NUMBER, number);
         }
 
     }
@@ -296,7 +284,7 @@ void FanCLexer::identifierToken(){
         addToken(Token::getKeyword(text));
     }
     else {
-        addToken(Token::Type::IDENTIFIER);
+        addToken(Type::IDENTIFIER);
     }
 }
 
@@ -320,7 +308,7 @@ void FanCLexer::skipCommentLine(){
     while (peek() != '\n' && !isEnd()) {advance();}
 }
 
-void FanCLexer::addToken(Token::Type type, std::variant<int, bool, double, std::string> literal){
+void FanCLexer::addToken(Type type, std::variant<int, bool, double, std::string> literal){
     std::string text = sourceCode.substr(start, current - start);
     tokens.push_back(Token(lineNum, column, type, text, literal));
 }

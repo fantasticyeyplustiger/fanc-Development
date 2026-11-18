@@ -17,4 +17,4 @@ func test() -> void:
 	var start_time := Time.get_ticks_usec()
 	lexer.compile_tokens(source_code)
 	var end_time := Time.get_ticks_usec()
-	print("Time: %d" % (end_time - start_time))
+	print("Token Parse Time: %d" % (end_time - start_time))

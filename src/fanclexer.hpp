@@ -1,20 +1,16 @@
 #pragma once
 
+#include "fancerror.hpp"
 #include "token.hpp"
-#include "godot_cpp/classes/wrapped.hpp"
-#include "godot_cpp/variant/string.hpp"
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <vector>
 
-class FanCLexer : public godot::RefCounted{
-
-    GDCLASS(FanCLexer, godot::RefCounted)
+class FanCLexer {
 
 public:
-    void compileTokens(const godot::String sourceCode);
-
-protected:
-    static void _bind_methods();
+    std::vector<FanCError> errors;
+    std::vector<Token> compileTokens(const std::string& sourceCode);
+    FanCLexer();
 
 private:
 
@@ -23,7 +19,7 @@ private:
     int lineNum = 0;
     int column = 0;
     int end = 0;
-    std::string sourceCode;
+    std::string& sourceCode;
     std::vector<Token> tokens;
 
     void printTokens();
@@ -60,6 +56,6 @@ private:
 
     char advance();
 
-    void addToken(Token::Type type, std::variant<int, bool, double, std::string> literal = false);
+    void addToken(Type type, std::variant<int, bool, double, std::string> literal = false);
 
     };
