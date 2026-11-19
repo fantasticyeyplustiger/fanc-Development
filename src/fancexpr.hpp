@@ -5,16 +5,31 @@
 #include <variant>
 #include <string>
 
+enum ExprIdentity {
+    IGNORE,
+    VARIABLE
+};
+
 class FanCExpr {
 
 public:
-    // accept() fundamentally returns a Literal.
+    // Fundamentally returns a Literal.
     virtual std::variant<int, bool, double, std::string> accept(Interpreter interpreter);
+    virtual Token getToken();
     virtual ~FanCExpr() = default;
+
+    ExprIdentity getIdentity() { return ExprIdentity::IGNORE; };
 };
 
 class Assign : public FanCExpr {
 std::variant<int, bool, double, std::string> accept(Interpreter interpreter);
+
+public:
+    Token name;
+    Token assigner;
+    FanCExpr newValue;
+
+    Assign(Token name, Token assigner, FanCExpr newValue) : name(name), assigner(assigner), newValue(newValue) {}
 };
 
 
@@ -25,6 +40,9 @@ std::variant<int, bool, double, std::string> accept(Interpreter interpreter);
 public:
     Token identifier;
     Variable(Token identifier) : identifier(identifier){};
+
+    Token getToken() { return identifier; };
+    ExprIdentity getIdentity() { return VARIABLE; }
 };
 
 

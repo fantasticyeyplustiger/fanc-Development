@@ -9,7 +9,7 @@
 class FanCParser {
 
 public:
-    std::vector<FanCStatement> parse(std::vector<Token>);
+    std::vector<FanCStatement> parse(std::vector<Token> &tokens);
 
 private:
 
@@ -22,7 +22,6 @@ private:
     FanCStatement declaration();
     FanCStatement varDeclaration();
     FanCStatement statement();
-    FanCStatement block();
     FanCStatement forStatement();
     FanCStatement whileStatement();
     FanCStatement breakStatement();
@@ -30,8 +29,10 @@ private:
     FanCStatement ifStatement();
     FanCStatement printStatement();
     FanCStatement expressionStatement();
+    
+    BlockStmt block();
 
-    FanCExpr expression();
+    FanCExpr expression() { return assignment(); };
     FanCExpr assignment();
     FanCExpr ternary();
     FanCExpr orExpr();
@@ -45,6 +46,7 @@ private:
 
     void synchronize();
 
+    bool validErrors();
     bool nextIsOperator(bool expectingOp = true);
     bool nextIsAnyIn(std::vector<Type> types);
     bool isEnd(){ return tokens.at(current).type == Type::END;};
