@@ -9,15 +9,26 @@
 class FanCParser {
 
 public:
-    std::vector<FanCStatement> parse(std::vector<Token> &tokens);
+    void parse(std::vector<Token> &tokens);
+    std::vector<FanCStatement> statements;
+    std::vector<FanCError> errors;
 
 private:
 
     int current = 0;
     int loops = 0;
 
+    const Type OPERATORS[22] = {
+        GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
+        EQUAL_EQUAL, NOT_EQUAL,
+        PLUS, MINUS, STAR, SLASH,
+        MODULO, TERNARY, COLON,
+        AND, OR, RIGHT_PAREN,
+        EQUAL, PLUS_EQUAL, MINUS_EQUAL,
+        STAR_EQUAL, SLASH_EQUAL, MODULO_EQUAL
+    };
+
     std::vector<Token> tokens;
-    std::vector<FanCError> errors;
 
     FanCStatement declaration();
     FanCStatement varDeclaration();

@@ -1,7 +1,6 @@
 // Include your classes, that you want to expose to Godot
 
-#include "fanclexer.hpp"
-#include "test.hpp"
+#include "fanc.hpp"
 #include <gdextension_interface.h>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/defs.hpp>
@@ -15,8 +14,8 @@ void initialize_gdextension_types(ModuleInitializationLevel p_level)
 		return;
 	}
 
-	GDREGISTER_CLASS(FanCLexer)
-	GDREGISTER_CLASS(Test)
+	GDREGISTER_CLASS(FanC)
+	//GDREGISTER_CLASS(Test)
 	// Register your classes here, so they are available in the Godot editor and engine
 	
 }

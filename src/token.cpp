@@ -7,31 +7,31 @@ std::string Token::toString(){
     return where + " " + t + ", Lexeme: " + lexeme;
 }
 
-const std::unordered_map<std::string, Token::Type> Token::Keywords = {
-    {"int", Token::Type::INT},
-    {"float", Token::Type::FLOAT},
-    {"bool", Token::Type::BOOL},
-    {"str", Token::Type::STR},
-    {"var", Token::Type::VAR},
-    {"true", Token::Type::TRUE},
-    {"false", Token::Type::FALSE},
-    {"if", Token::Type::IF},
-    {"elif", Token::Type::ELIF},
-    {"else", Token::Type::ELSE},
-    {"and", Token::Type::AND},
-    {"or", Token::Type::OR},
-    {"not", Token::Type::NOT},
-    {"print", Token::Type::PRINT},
-    {"return", Token::Type::RETURN},
-    {"break", Token::Type::BREAK},
-    {"continue", Token::Type::CONTINUE},
-    {"while", Token::Type::WHILE},
-    {"for", Token::Type::FOR},
-    {"super", Token::Type::SUPER},
-    {"class", Token::Type::CLASS}
+const std::unordered_map<std::string, Type> Token::Keywords = {
+    {"int", INT},
+    {"float", FLOAT},
+    {"bool", BOOL},
+    {"str", STR},
+    {"var", VAR},
+    {"true", TRUE},
+    {"false", FALSE},
+    {"if", IF},
+    {"elif", ELIF},
+    {"else", ELSE},
+    {"and", AND},
+    {"or", OR},
+    {"not", NOT},
+    {"print", PRINT},
+    {"return", RETURN},
+    {"break", BREAK},
+    {"continue", CONTINUE},
+    {"while", WHILE},
+    {"for", FOR},
+    {"super", SUPER},
+    {"class", CLASS}
 };
 
-Token::Type Token::getKeyword(std::string keyword){
+Type Token::getKeyword(std::string keyword){
     return Keywords.at(keyword);
 }
 

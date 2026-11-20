@@ -1,4 +1,4 @@
-#include "Token.hpp"
+#pragma once
 #include "fancerror.hpp"
 #include "token.hpp"
 #include "fanclexer.hpp"
@@ -11,7 +11,7 @@ void FanCLexer::printTokens(){
     }
 }
 
-std::vector<Token> FanCLexer::compileTokens(const std::string& sourceCode){
+std::vector<Token> FanCLexer::compileTokens(const std::string &sourceCode){
     this -> sourceCode = sourceCode;
 
     start = 0;
@@ -101,10 +101,10 @@ void FanCLexer::scanToken() {
 }
 
 void FanCLexer::reportUnexpectedChar(){
-    errors.push_back(FanCError(lineNum, column, 1, FanCError::LEXER, "Unexpected character!"));
+    FanCLexer::errors.push_back(FanCError(lineNum, column, 1, FanCError::COMPILER, "Unexpected character!"));
 }
 
-char FanCLexer::peek(int extra){
+char FanCLexer::peek(const int extra){
     if (current + extra >= end) {return '\0';}
     return sourceCode[current + extra];
 };
@@ -162,7 +162,7 @@ void FanCLexer::stringToken(){
 
     // If this is true then last " wasn't found
     if (isEnd()){
-        errors.push_back(FanCError(lineNum, column, 1, FanCError::COMPILER, "Unterminated string!"));
+        FanCLexer::errors.push_back(FanCError(lineNum, column, 1, FanCError::COMPILER, "Unterminated string!"));
         return;
     }
 
@@ -308,7 +308,7 @@ void FanCLexer::skipCommentLine(){
     while (peek() != '\n' && !isEnd()) {advance();}
 }
 
-void FanCLexer::addToken(Type type, std::variant<int, bool, double, std::string> literal){
+void FanCLexer::addToken(const Type &type, const std::variant<int, bool, double, std::string> &literal){
     std::string text = sourceCode.substr(start, current - start);
     tokens.push_back(Token(lineNum, column, type, text, literal));
 }

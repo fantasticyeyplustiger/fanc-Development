@@ -5,19 +5,19 @@
 #include "fancstatement.hpp"
 #include <vector>
 
-std::vector<FanCStatement> FanCParser::parse(std::vector<Token> &tokens){
+void FanCParser::parse(std::vector<Token> &tokens){
     this -> tokens = tokens;
     
     std::vector<FanCStatement> statements;
 
     current = 0;
-    errors = {};
+    FanCParser::errors = {};
 
     while (!isEnd()){
         statements.push_back(declaration());
     }
 
-    return statements;
+    this -> statements = statements;
 }
 
 
@@ -28,7 +28,7 @@ FanCStatement FanCParser::declaration(){
 
     FanCStatement statement = FanCParser::statement();
 
-    if (errors.size() > 0){
+    if (FanCParser::errors.size() > 0){
         synchronize();
     }
 
@@ -52,13 +52,15 @@ FanCStatement FanCParser::varDeclaration(){
             VAR:
             STR: initializer = Literal("");
             default:
-                errors.push_back(FanCError(type, FanCError::COMPILER, "Could not declare variable..."));
+                FanCParser::errors.push_back(FanCError(type, FanCError::COMPILER, "Could not declare variable..."));
                 initializer = Literal("");
         }
     }
 
+    FanCExpr* pointer = &initializer;
+
     consume(SEMICOLON, "Expected ';' after variable declaration!");
-    return VariableStmt(type, varName, initializer);
+    return VariableStmt(type, varName, pointer);
 }
 
 
@@ -90,6 +92,75 @@ BlockStmt FanCParser::block(){
     return BlockStmt(statements);
 }
 
+FanCStatement FanCParser::forStatement(){
+    consume(LEFT_PAREN, "Expected '(' after 'for'.");
+
+    FanCStatement initializer;
+
+    if (nextIsAnyIn({INT, FLOAT, BOOL, STR, VAR})){
+        initializer = varDeclaration();
+    }
+    else{
+        initializer = expressionStatement();
+    }
+
+    FanCExpr condition;
+
+    if (!nextIsAnyIn({SEMICOLON})){
+        condition = expression();
+    }
+
+    consume(SEMICOLON, "Expected ';' after for loop condition!");
+
+    FanCExpr increment;
+
+    if (!nextIsAnyIn({RIGHT_PAREN})){
+        increment = expression();
+    }
+
+    if (nextIsAnyIn({SEMICOLON})) { advance(); }
+
+    consume(RIGHT_PAREN, "Expected ')' after for clauses!");
+    advance();
+    
+    loops++;
+
+    BlockStmt body;
+    Token prev = previous();
+
+    if (prev.type == LEFT_BRACE){
+        body = block();
+    }
+    else{
+        FanCParser::errors.push_back(
+            FanCError(
+            prev.lineNum, prev.column + 1, 1, FanCError::COMPILER,
+            "Expected '{' after for's ')'!")
+        );
+    }
+
+    if (condition.identity == NOT_INITIALIZED){
+        condition = Literal(true);
+    }
+
+    loops--;
+
+    FanCExpr* conditionPointer = &condition;
+
+    auto loop = WhileStmt(conditionPointer, body);
+
+
+    if (increment.identity != NOT_INITIALIZED){
+
+        auto incrementPointer = &increment;
+
+        auto finalBody = ForStmt(ExprStmt(incrementPointer), initializer, loop);
+
+        return finalBody;
+    }
+
+    return loop;
+}
 
 FanCStatement FanCParser::whileStatement(){
     FanCExpr condition = expression();
@@ -106,7 +177,7 @@ FanCStatement FanCParser::whileStatement(){
         body = block();
     }
     else{
-        errors.push_back(
+        FanCParser::errors.push_back(
                 FanCError(
                     prev.lineNum, prev.column + 1, 1, FanCError::COMPILER,
                     "Expected '{' after while condition!"));
@@ -115,13 +186,15 @@ FanCStatement FanCParser::whileStatement(){
 
     loops--;
 
-    return WhileStmt(condition, body);
+    FanCExpr* pointer = &condition;
+
+    return WhileStmt(pointer, body);
 }
 
 
 FanCStatement FanCParser::breakStatement(){
     if (loops == 0){
-        errors.push_back(FanCError(peek(), FanCError::COMPILER, "'break' used outside loop!"));
+        FanCParser::errors.push_back(FanCError(peek(), FanCError::COMPILER, "'break' used outside loop!"));
     }
 
     advance();
@@ -132,7 +205,7 @@ FanCStatement FanCParser::breakStatement(){
 
 FanCStatement FanCParser::continueStatement(){
     if (loops == 0){
-        errors.push_back(FanCError(peek(), FanCError::COMPILER, "'continue' used outside loop!"));
+        FanCParser::errors.push_back(FanCError(peek(), FanCError::COMPILER, "'continue' used outside loop!"));
     }
 
     advance();
@@ -160,7 +233,7 @@ FanCStatement FanCParser::ifStatement(){
             then = block();
         }
         else{
-            errors.push_back(
+            FanCParser::errors.push_back(
                 FanCError(
                     prev.lineNum, prev.column + 1, 1, FanCError::COMPILER,
                     "Expected '{' after if condition!"));
@@ -178,7 +251,7 @@ FanCStatement FanCParser::ifStatement(){
         advance();
         Token prev = previous();
         if (prev.type != LEFT_BRACE){
-            errors.push_back(FanCError(prev.lineNum, prev.column + 1, 1, FanCError::COMPILER,
+            FanCParser::errors.push_back(FanCError(prev.lineNum, prev.column + 1, 1, FanCError::COMPILER,
                 "Expected '{' after else!"));
         }
         elseBranch = block();
@@ -199,12 +272,14 @@ FanCStatement FanCParser::printStatement(){
     FanCExpr value = expression();
 
     if (!check(SEMICOLON)) {
-        errors.push_back(
+        FanCParser::errors.push_back(
             FanCError(previous(), FanCError::COMPILER, "Expected ';' after expression!"));
     }
     advance(); // consume
 
-    return PrintStmt(value);
+    FanCExpr* pointer = &value;
+
+    return PrintStmt(pointer);
 }
 
 
@@ -212,12 +287,14 @@ FanCStatement FanCParser::expressionStatement(){
     FanCExpr value = expression();
 
     if (!check(SEMICOLON)) {
-        errors.push_back(
+        FanCParser::errors.push_back(
             FanCError(previous(), FanCError::COMPILER, "Expected ';' after expression!"));
     }
     advance(); // consume
 
-    return ExprStmt(value);
+    FanCExpr* pointer = &value;
+
+    return ExprStmt(pointer);
 }
 
 
@@ -230,12 +307,12 @@ FanCExpr FanCParser::assignment(){
         Token equals = previous();
         FanCExpr value = assignment();
 
-        if (expr.getIdentity() == VARIABLE){
+        if (expr.identity == VARIABLE){
             Token identifier = expr.getToken();
             return Assign(identifier, equals, value);
         }
         else {
-            errors.push_back(FanCError(equals, FanCError::COMPILER, "Invalid assignment target!"));
+            FanCParser::errors.push_back(FanCError(equals, FanCError::COMPILER, "Invalid assignment target!"));
         }
     }
 
@@ -252,7 +329,7 @@ FanCExpr FanCParser::ternary(){
         
         if (!check(Type::COLON)){
             Token currentToken = peek();
-            errors.push_back(FanCError(currentToken.lineNum, currentToken.column + 1, 1, FanCError::IGNORABLE,
+            FanCParser::errors.push_back(FanCError(currentToken.lineNum, currentToken.column + 1, 1, FanCError::IGNORABLE,
             "Expected ':' for ternary operator!"));
         }
         else{
@@ -383,7 +460,7 @@ FanCExpr FanCParser::primary(){
         }
 
         case Type::RIGHT_BRACE: {
-            errors.push_back(FanCError(currentToken, FanCError::COMPILER, "Unexpected '}'!"));
+            FanCParser::errors.push_back(FanCError(currentToken, FanCError::COMPILER, "Unexpected '}'!"));
             break;
         }
 
@@ -391,8 +468,9 @@ FanCExpr FanCParser::primary(){
     }
 
     if (!initialized) {
-        errors.push_back(FanCError(currentToken, FanCError::COMPILER,"Expected a literal!"));
+        FanCParser::errors.push_back(FanCError(currentToken, FanCError::COMPILER,"Expected a literal!"));
         advance();
+        expr.identity = NOT_INITIALIZED;
         return expr;
     }
 
@@ -405,17 +483,43 @@ FanCExpr FanCParser::primary(){
     return expr;
 }
 
+void FanCParser::synchronize(){
+    advance();
+
+    while (!isEnd()){
+        if (previous().type == SEMICOLON) { return; }
+
+        switch (peek().type){
+            case CLASS:
+            case VAR:
+            case INT:
+            case FLOAT:
+            case STR:
+            case BOOL:
+            case IF:
+            case ELIF:
+            case ELSE:
+            case WHILE:
+            case PRINT:
+            case RETURN: return;
+            default: {}
+        }
+
+        advance();
+    }
+}
+
 bool FanCParser::consume(Type type, std::string errorMessage){
     if (check(type)) { advance(); return true; }
     
-    errors.push_back(FanCError(previous(), FanCError::COMPILER, errorMessage));
+    FanCParser::errors.push_back(FanCError(previous(), FanCError::COMPILER, errorMessage));
     return false;
 }
 
 bool FanCParser::consumePrevious(Type type, std::string errorMessage){
     if (previous().type == type) { advance(); return true; }
     
-    errors.push_back(FanCError(previous(), FanCError::COMPILER, errorMessage));
+    FanCParser::errors.push_back(FanCError(previous(), FanCError::COMPILER, errorMessage));
     return false;
 }
 
@@ -426,6 +530,29 @@ bool FanCParser::nextIsAnyIn(std::vector<Type> types){
             advance();
             return true;
         }
+    }
+
+    return false;
+}
+
+bool FanCParser::nextIsOperator(bool expectingOp){
+    if (isEnd()) { return false; }
+
+    Token op = peek();
+
+    for (Type valid : OPERATORS){
+        if (op.type == valid && !expectingOp){
+            FanCParser::errors.push_back(
+                FanCError(op, FanCError::COMPILER, "Shouldn't have more than one operator!"));
+        }
+        else if (op.type == valid) {
+            return true;
+        }
+    }
+
+    if (expectingOp){
+        FanCParser::errors.push_back(
+            FanCError(op, FanCError::COMPILER, "Expected an operator!"));
     }
 
     return false;

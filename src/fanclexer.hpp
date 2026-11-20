@@ -10,7 +10,8 @@ class FanCLexer {
 public:
     std::vector<FanCError> errors;
     std::vector<Token> compileTokens(const std::string& sourceCode);
-    FanCLexer();
+    std::vector<Token> tokens;
+    FanCLexer() {}
 
 private:
 
@@ -19,8 +20,7 @@ private:
     int lineNum = 0;
     int column = 0;
     int end = 0;
-    std::string& sourceCode;
-    std::vector<Token> tokens;
+    std::string sourceCode;
 
     void printTokens();
 
@@ -52,10 +52,10 @@ private:
 
     void skipCommentLine();
 
-    char peek(int extra = 0);
+    char peek(const int extra = 0);
 
     char advance();
 
-    void addToken(Type type, std::variant<int, bool, double, std::string> literal = false);
+    void addToken(const Type &type, const std::variant<int, bool, double, std::string> &literal = false);
 
     };
