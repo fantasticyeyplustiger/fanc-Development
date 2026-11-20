@@ -12,6 +12,7 @@ public:
     std::vector<Token> compileTokens(const std::string& sourceCode);
     std::vector<Token> tokens;
     FanCLexer() {}
+    void printTokens();
 
 private:
 
@@ -21,8 +22,6 @@ private:
     int column = 0;
     int end = 0;
     std::string sourceCode;
-
-    void printTokens();
 
     void scanToken();
 

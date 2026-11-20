@@ -3,6 +3,7 @@
 #include <string>
 #include <variant>
 #include <unordered_map>
+#include <godot_cpp/classes/ref_counted.hpp>
 
 enum Type {
 	LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
@@ -52,5 +53,9 @@ public:
 	static bool isKeyword(std::string keyword);
 
 	std::string toString();
+
+	void print() {
+		godot::print_line(this -> toString().c_str());
+	}
     
 };

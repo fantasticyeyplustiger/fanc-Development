@@ -42,7 +42,7 @@ FanCStatement FanCParser::varDeclaration(){
 
     FanCExpr initializer;
 
-    if (check(EQUAL)) { initializer = expression(); }
+    if (check(EQUAL)) { advance(); initializer = expression(); }
 
     else {
         switch (type.type){
@@ -59,7 +59,7 @@ FanCStatement FanCParser::varDeclaration(){
 
     FanCExpr* pointer = &initializer;
 
-    consume(SEMICOLON, "Expected ';' after variable declaration!");
+    consumePrevious(SEMICOLON, "Expected ';' after variable declaration!");
     return VariableStmt(type, varName, pointer);
 }
 
@@ -476,7 +476,9 @@ FanCExpr FanCParser::primary(){
 
     advance();
 
-    if (nextIsAnyIn({Type::SEMICOLON, Type::LEFT_BRACE})) { return expr; }
+    if (nextIsAnyIn({Type::SEMICOLON, Type::LEFT_BRACE})){
+        return expr;
+    }
 
     nextIsOperator();
 
@@ -512,7 +514,10 @@ void FanCParser::synchronize(){
 bool FanCParser::consume(Type type, std::string errorMessage){
     if (check(type)) { advance(); return true; }
     
-    FanCParser::errors.push_back(FanCError(previous(), FanCError::COMPILER, errorMessage));
+    peek().print();
+
+    Token prev = previous();
+    FanCParser::errors.push_back(FanCError(prev.lineNum, prev.column + 1, 1, FanCError::COMPILER, errorMessage));
     return false;
 }
 

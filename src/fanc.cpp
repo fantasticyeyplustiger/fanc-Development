@@ -28,6 +28,8 @@ void FanC::run(godot::String sourceCode){
         return;
     }
 
+    lexer.printTokens();
+
     parser.parse(lexer.tokens);
 
     if (pushErrors(parser.errors)) {
@@ -64,7 +66,7 @@ bool FanC::pushErrors(const std::vector<FanCError> &errors){
         std::vector<std::string> sourceLines = split(source, '\n');
 
         ERR_PRINT(msg.c_str());
-        ERR_PRINT(sourceLines[error.lineNum].c_str());
+        ERR_PRINT(sourceLines[error.lineNum - 1].c_str());
         ERR_PRINT(location.c_str());
 
         if (error.type != FanCError::IGNORABLE) {

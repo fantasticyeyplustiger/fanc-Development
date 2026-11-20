@@ -12,4 +12,4 @@ func test() -> void:
 	var start_time := Time.get_ticks_usec()
 	lexer.run(source_code)
 	var end_time := Time.get_ticks_usec()
-	print("Token Parse Time: %d" % (end_time - start_time))
+	print("Parse & Interpret Time (Milliseconds): %d" % (end_time - start_time))
